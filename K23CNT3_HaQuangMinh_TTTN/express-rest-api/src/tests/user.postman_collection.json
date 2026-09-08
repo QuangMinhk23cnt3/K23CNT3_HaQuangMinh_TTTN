@@ -1,0 +1,863 @@
+{
+  "info": {
+    "name": "Express REST API - User Management",
+    "description": "Postman Collection để kiểm thử toàn bộ API quản lý User.\n\nBase URL: http://localhost:3000\n\nCác test cases bao gồm:\n- TC01-TC02: GET /api/users\n- TC03-TC09: POST /api/users\n- TC10-TC12: GET /api/users/:id\n- TC13-TC16: PUT /api/users/:id\n- TC17-TC19: DELETE /api/users/:id\n- TC20: GET / (Health Check)",
+    "_postman_id": "express-rest-api-user-management-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL của server"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId của user vừa tạo (auto-set bởi TC03)"
+    },
+    {
+      "key": "non_existent_id",
+      "value": "64a1b2c3d4e5f6a7b8c9d0e1",
+      "type": "string",
+      "description": "ID đúng format nhưng không tồn tại trong DB"
+    }
+  ],
+  "item": [
+    {
+      "name": "Suite 6: Health Check",
+      "item": [
+        {
+          "name": "TC20 - Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC20: Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC20: message đúng', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.message).to.eql('Express + MongoDB API is running');",
+                  "});",
+                  "",
+                  "pm.test('TC20: có field docs', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('docs');",
+                  "    pm.expect(json.docs).to.include('/api-docs');",
+                  "});",
+                  "",
+                  "pm.test('TC20: có field version', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('version');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "TC20: Kiểm tra health check endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suite 1: GET /api/users",
+      "item": [
+        {
+          "name": "TC01 - Lấy danh sách users (DB rỗng hoặc có dữ liệu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC01: Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC01: success = true', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('TC01: có field count', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('count');",
+                  "    pm.expect(json.count).to.be.a('number');",
+                  "});",
+                  "",
+                  "pm.test('TC01: data là array', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('TC01: count khớp với độ dài data', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.count).to.eql(json.data.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC01 & TC02: Lấy danh sách tất cả users"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suite 2: POST /api/users",
+      "item": [
+        {
+          "name": "TC03 - Tạo user hợp lệ (đầy đủ thông tin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC03: Status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('TC03: success = true', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('TC03: message đúng', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.message).to.eql('Tạo user thành công.');",
+                  "});",
+                  "",
+                  "pm.test('TC03: data có _id', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data).to.have.property('_id');",
+                  "    // Lưu user_id để dùng cho các test case tiếp theo",
+                  "    pm.collectionVariables.set('user_id', json.data._id);",
+                  "    console.log('Saved user_id:', json.data._id);",
+                  "});",
+                  "",
+                  "pm.test('TC03: data.name đúng', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.name).to.eql('Nguyen Van A');",
+                  "});",
+                  "",
+                  "pm.test('TC03: data.email đúng', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.email).to.eql('nguyenvana@example.com');",
+                  "});",
+                  "",
+                  "pm.test('TC03: data.age đúng', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.age).to.eql(25);",
+                  "});",
+                  "",
+                  "pm.test('TC03: data có createdAt và updatedAt', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data).to.have.property('createdAt');",
+                  "    pm.expect(json.data).to.have.property('updatedAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyen Van A\",\n  \"email\": \"nguyenvana@example.com\",\n  \"age\": 25\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC03: Tạo user với đầy đủ thông tin hợp lệ. Tự động lưu user_id vào collection variable."
+          }
+        },
+        {
+          "name": "TC04 - Tạo user hợp lệ (không có age - dùng default 18)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC04: Status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('TC04: age mặc định là 18', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.age).to.eql(18);",
+                  "});",
+                  "",
+                  "pm.test('TC04: success = true', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tran Thi B\",\n  \"email\": \"tranthib@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC04: Tạo user không có age, kiểm tra giá trị default = 18"
+          }
+        },
+        {
+          "name": "TC05 - Tạo user - Thiếu trường name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC05: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC05: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC05: message đề cập đến name', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('name');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"age\": 20\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC05: Thiếu trường name bắt buộc"
+          }
+        },
+        {
+          "name": "TC06 - Tạo user - Thiếu trường email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC06: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC06: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC06: message đề cập đến email', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Le Van C\",\n  \"age\": 22\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC06: Thiếu trường email bắt buộc"
+          }
+        },
+        {
+          "name": "TC07 - Tạo user - Email sai định dạng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC07: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC07: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC07: message đề cập định dạng email', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg.toLowerCase()).to.satisfy(m => m.includes('email') || m.includes('định dạng'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Le Van D\",\n  \"email\": \"not-an-email\",\n  \"age\": 20\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC07: Email sai định dạng (not-an-email)"
+          }
+        },
+        {
+          "name": "TC08 - Tạo user - Duplicate email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC08: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC08: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC08: message đề cập đến email đã tồn tại', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('đã được sử dụng');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyen Van E\",\n  \"email\": \"nguyenvana@example.com\",\n  \"age\": 30\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC08: Email đã tồn tại (duplicate key error)"
+          }
+        },
+        {
+          "name": "TC09 - Tạo user - Age ngoài phạm vi (> 120)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC09: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC09: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC09: message đề cập đến age', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('age');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test.age@example.com\",\n  \"age\": 200\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "TC09: Age = 200, vượt quá phạm vi cho phép (0-120)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suite 3: GET /api/users/:id",
+      "item": [
+        {
+          "name": "TC10 - Lấy user theo ID hợp lệ (tồn tại)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC10: Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC10: success = true', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('TC10: data._id khớp với user_id', function () {",
+                  "    const json = pm.response.json();",
+                  "    const userId = pm.collectionVariables.get('user_id');",
+                  "    pm.expect(json.data._id).to.eql(userId);",
+                  "});",
+                  "",
+                  "pm.test('TC10: data có đầy đủ fields', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data).to.have.property('_id');",
+                  "    pm.expect(data).to.have.property('name');",
+                  "    pm.expect(data).to.have.property('email');",
+                  "    pm.expect(data).to.have.property('age');",
+                  "    pm.expect(data).to.have.property('createdAt');",
+                  "    pm.expect(data).to.have.property('updatedAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            },
+            "description": "TC10: Lấy user theo ID hợp lệ (dùng user_id từ TC03)"
+          }
+        },
+        {
+          "name": "TC11 - Lấy user theo ID không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC11: Status 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('TC11: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC11: message đề cập không tìm thấy', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('Không tìm thấy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{non_existent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{non_existent_id}}"]
+            },
+            "description": "TC11: ID đúng format ObjectId nhưng không tồn tại trong DB"
+          }
+        },
+        {
+          "name": "TC12 - Lấy user theo ID sai định dạng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC12: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC12: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});",
+                  "",
+                  "pm.test('TC12: message đề cập ID không hợp lệ', function () {",
+                  "    const msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('không hợp lệ');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/invalid-id-123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "invalid-id-123"]
+            },
+            "description": "TC12: ID sai định dạng ObjectId (invalid-id-123)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suite 4: PUT /api/users/:id",
+      "item": [
+        {
+          "name": "TC13 - Cập nhật user hợp lệ (tất cả fields)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC13: Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC13: success = true', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('TC13: message đúng', function () {",
+                  "    pm.expect(pm.response.json().message).to.eql('Cập nhật user thành công.');",
+                  "});",
+                  "",
+                  "pm.test('TC13: data.name đã được cập nhật', function () {",
+                  "    pm.expect(pm.response.json().data.name).to.eql('Nguyen Van A Updated');",
+                  "});",
+                  "",
+                  "pm.test('TC13: data.age đã được cập nhật', function () {",
+                  "    pm.expect(pm.response.json().data.age).to.eql(30);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyen Van A Updated\",\n  \"email\": \"updated@example.com\",\n  \"age\": 30\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            },
+            "description": "TC13: Cập nhật tất cả fields của user"
+          }
+        },
+        {
+          "name": "TC14 - Cập nhật user - Chỉ cập nhật name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC14: Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC14: data.name đã được cập nhật', function () {",
+                  "    pm.expect(pm.response.json().data.name).to.eql('Ten Moi');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ten Moi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            },
+            "description": "TC14: Partial update - chỉ thay đổi name"
+          }
+        },
+        {
+          "name": "TC15 - Cập nhật user - ID không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC15: Status 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('TC15: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Update\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{non_existent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{non_existent_id}}"]
+            },
+            "description": "TC15: Update user với ID không tồn tại"
+          }
+        },
+        {
+          "name": "TC16 - Cập nhật user - ID sai định dạng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC16: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC16: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/bad-id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "bad-id"]
+            },
+            "description": "TC16: Update với ID sai định dạng ObjectId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suite 5: DELETE /api/users/:id",
+      "item": [
+        {
+          "name": "TC17 - Xóa user hợp lệ (tồn tại)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC17: Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC17: success = true', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('TC17: message đúng', function () {",
+                  "    pm.expect(pm.response.json().message).to.eql('Xóa user thành công.');",
+                  "});",
+                  "",
+                  "pm.test('TC17: data.deletedId đúng', function () {",
+                  "    const json = pm.response.json();",
+                  "    const userId = pm.collectionVariables.get('user_id');",
+                  "    pm.expect(json.data.deletedId).to.eql(userId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            },
+            "description": "TC17: Xóa user hợp lệ với user_id từ TC03"
+          }
+        },
+        {
+          "name": "TC18 - Xóa user - ID không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC18: Status 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('TC18: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{non_existent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{non_existent_id}}"]
+            },
+            "description": "TC18: Xóa user với ID không tồn tại"
+          }
+        },
+        {
+          "name": "TC19 - Xóa user - ID sai định dạng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC19: Status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC19: success = false', function () {",
+                  "    pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/invalid-id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "invalid-id"]
+            },
+            "description": "TC19: Xóa user với ID sai định dạng"
+          }
+        }
+      ]
+    }
+  ]
+}
