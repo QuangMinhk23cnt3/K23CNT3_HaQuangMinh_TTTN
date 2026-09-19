@@ -1,12 +1,54 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import App from "../App"
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from '../contexts/AuthContext'
+import { TaskProvider } from '../contexts/TaskContext'
+
+// Layouts
+import MainLayout from '../layouts/MainLayout'
+import AuthLayout from '../layouts/AuthLayout'
+
+// Pages
+import Dashboard from '../pages/dashboard/Dashboard'
+import TasksPage from '../pages/tasks/TasksPage'
+import AiAssistantPage from '../pages/ai/AiAssistantPage'
+import CalendarPage from '../pages/calendar/CalendarPage'
+import PomodoroPage from '../pages/focus/PomodoroPage'
+import AnalyticsPage from '../pages/analytics/AnalyticsPage'
+import SettingsPage from '../pages/settings/SettingsPage'
+
+// Auth Pages
+import Login from '../pages/auth/Login'
+import Register from '../pages/auth/Register'
+import ForgotPassword from '../pages/auth/ForgotPassword'
 
 export default function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <TaskProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* App Workspace Routes */}
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="tasks" element={<TasksPage />} />
+              <Route path="ai-assistant" element={<AiAssistantPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="pomodoro" element={<PomodoroPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* Auth Routes */}
+            <Route path="/auth" element={<AuthLayout />}>
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </TaskProvider>
+    </AuthProvider>
   )
 }
