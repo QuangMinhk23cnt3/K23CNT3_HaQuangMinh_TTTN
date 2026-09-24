@@ -3,6 +3,10 @@ import type { User, LoginCredentials, RegisterCredentials } from '../types/auth'
 
 const USER_STORAGE_KEY = 'taskai_user'
 const TOKEN_STORAGE_KEY = 'taskai_token'
+const REFRESH_TOKEN_KEY = 'taskai_refresh_token'
+
+// Kiểm tra có bật chế độ demo không (khi backend chưa sẵn sàng)
+const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
 // Tài khoản demo mặc định cho sinh viên Hà Quang Minh - K23CNT3
 const DEMO_USER: User = {
@@ -16,20 +20,24 @@ const DEMO_USER: User = {
 
 export const authService = {
   async signin(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
-    try {
-      const response = await api.post('/auth/signin', credentials)
-      if (response.data?.data?.user && response.data?.data?.accessToken) {
-        const user = response.data.data.user
-        const token = response.data.data.accessToken
-        this.saveSession(user, token)
-        return { user, token }
+    // Thử gọi API thật trước
+    if (!IS_DEMO_MODE) {
+      try {
+        const response = await api.post('/auth/signin', credentials)
+        if (response.data?.data?.user && response.data?.data?.accessToken) {
+          const user = response.data.data.user
+          const token = response.data.data.accessToken
+          const refreshToken = response.data.data.refreshToken
+          this.saveSession(user, token, refreshToken)
+          return { user, token }
+        }
+      } catch (err: any) {
+        // Nếu không phải demo mode → throw lỗi thật
+        throw err
       }
-    } catch {
-      // Fallback Demo Login nếu server chưa bật hoặc lỗi kết nối
-      console.warn('Backend Auth API chưa bật hoặc không kết nối được, chuyển sang chế độ Demo')
     }
 
-    // Luôn cho phép đăng nhập demo mượt mà cho đồ án tốt nghiệp
+    // Demo mode: cho phép đăng nhập demo mượt mà cho đồ án tốt nghiệp
     const user: User = {
       ...DEMO_USER,
       email: credentials.email || DEMO_USER.email,
@@ -41,18 +49,27 @@ export const authService = {
   },
 
   async signup(credentials: RegisterCredentials): Promise<{ user: User; token: string }> {
-    try {
-      const response = await api.post('/auth/signup', credentials)
-      if (response.data?.data?.user) {
-        const user = response.data.data.user
-        const token = response.data.data.accessToken || 'token_' + Date.now()
-        this.saveSession(user, token)
-        return { user, token }
+    if (!IS_DEMO_MODE) {
+      try {
+        const response = await api.post('/auth/signup', credentials)
+        if (response.data?.data) {
+          const data = response.data.data
+          const user: User = {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            role: 'user',
+            createdAt: new Date().toISOString()
+          }
+          // Signup thường yêu cầu verify email trước, không có token
+          return { user, token: '' }
+        }
+      } catch (err: any) {
+        throw err
       }
-    } catch {
-      console.warn('Backend Auth API signup fallback')
     }
 
+    // Demo mode fallback
     const user: User = {
       id: 'user-' + Date.now(),
       name: credentials.name,
@@ -65,27 +82,46 @@ export const authService = {
     return { user, token }
   },
 
-  saveSession(user: User, token: string): void {
+  saveSession(user: User, token: string, refreshToken?: string): void {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
     localStorage.setItem(TOKEN_STORAGE_KEY, token)
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+    }
   },
 
   getCurrentUser(): User | null {
     const raw = localStorage.getItem(USER_STORAGE_KEY)
     if (!raw) {
-      // Tự động khởi tạo phiên demo để người dùng trải nghiệm ngay
-      this.saveSession(DEMO_USER, 'demo_token_init')
-      return DEMO_USER
+      // Chỉ tự động tạo demo session nếu đang ở demo mode
+      if (IS_DEMO_MODE) {
+        this.saveSession(DEMO_USER, 'demo_token_init')
+        return DEMO_USER
+      }
+      return null
     }
     try {
       return JSON.parse(raw)
     } catch {
-      return DEMO_USER
+      return null
     }
   },
 
-  signout(): void {
+  async signout(): Promise<void> {
+    // Gọi API signout để invalidate refresh token ở server
+    try {
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY)
+      if (token && !token.startsWith('demo_')) {
+        await api.post('/auth/signout')
+      }
+    } catch {
+      // Ignore errors — vẫn cleanup local dù API fail
+      console.warn('Không thể gọi API signout, cleanup local session.')
+    }
+
+    // Cleanup local storage
     localStorage.removeItem(USER_STORAGE_KEY)
     localStorage.removeItem(TOKEN_STORAGE_KEY)
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
   }
 }

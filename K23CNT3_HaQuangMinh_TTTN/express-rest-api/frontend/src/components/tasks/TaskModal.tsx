@@ -81,7 +81,7 @@ export default function TaskModal() {
     }, 400)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
 
@@ -90,35 +90,39 @@ export default function TaskModal() {
       .map(t => t.trim())
       .filter(t => t.length > 0)
 
-    if (editingTask) {
-      updateTask({
-        ...editingTask,
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        category,
-        status,
-        dueDate,
-        dueTime,
-        tags: parsedTags,
-        subtasks
-      })
-    } else {
-      addTask({
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        category,
-        status,
-        dueDate,
-        dueTime,
-        tags: parsedTags,
-        subtasks,
-        aiGenerated: isAiGenerating || subtasks.some(s => s.id.startsWith('ai-'))
-      })
+    try {
+      if (editingTask) {
+        await updateTask({
+          ...editingTask,
+          title: title.trim(),
+          description: description.trim(),
+          priority,
+          category,
+          status,
+          dueDate,
+          dueTime,
+          tags: parsedTags,
+          subtasks
+        })
+      } else {
+        await addTask({
+          title: title.trim(),
+          description: description.trim(),
+          priority,
+          category,
+          status,
+          dueDate,
+          dueTime,
+          tags: parsedTags,
+          subtasks,
+          aiGenerated: isAiGenerating || subtasks.some(s => s.id.startsWith('ai-'))
+        })
+      }
+      closeTaskModal()
+    } catch (error: any) {
+      console.error(error)
+      alert(`Có lỗi xảy ra khi lưu công việc. Vui lòng thử lại! Chi tiết: ${error?.response?.data?.message || error?.message || 'Không rõ nguyên nhân'}`)
     }
-
-    closeTaskModal()
   }
 
   return (

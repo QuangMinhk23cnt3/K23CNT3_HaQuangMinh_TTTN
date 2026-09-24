@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import type { Task, TaskCategory, TaskPriority, TaskStatus, ProductivityStats, PomodoroState } from '../types/task'
 import { taskService } from '../services/taskService'
-import { parseNaturalLanguageTask } from '../services/aiService'
+import { parseNaturalLanguageTaskAsync } from '../services/aiService'
 
 interface TaskContextType {
   tasks: Task[]
@@ -15,12 +15,12 @@ interface TaskContextType {
   setFilterPriority: (priority: TaskPriority | 'all') => void
   filterStatus: TaskStatus | 'all'
   setFilterStatus: (status: TaskStatus | 'all') => void
-  addTask: (taskData: Omit<Task, 'id' | 'createdAt'>) => Task
-  updateTask: (task: Task) => void
-  deleteTask: (id: string) => void
-  changeTaskStatus: (id: string, newStatus: TaskStatus) => void
-  toggleSubtask: (taskId: string, subtaskId: string) => void
-  addAiTaskFromText: (prompt: string) => Task
+  addTask: (taskData: Omit<Task, 'id' | 'createdAt'>) => Promise<Task>
+  updateTask: (task: Task) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
+  changeTaskStatus: (id: string, newStatus: TaskStatus) => Promise<void>
+  toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>
+  addAiTaskFromText: (prompt: string) => Promise<Task>
   // Modal state
   isTaskModalOpen: boolean
   editingTask: Task | null
@@ -68,10 +68,18 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     totalFocusSeconds: 50 * 60
   })
 
-  // Load initial tasks
+  // Load initial tasks from Backend API
   useEffect(() => {
-    const loaded = taskService.getTasks()
-    setTasks(loaded)
+    const fetchTasks = async () => {
+      // Check if user is logged in (has token)
+      const token = localStorage.getItem('taskai_token')
+      if (token) {
+        const loaded = await taskService.getTasks()
+        setTasks(loaded)
+      }
+    }
+    fetchTasks()
+    
     const focus = taskService.getFocusStats()
     setPomodoro(prev => ({
       ...prev,
@@ -123,37 +131,40 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 4000)
   }
 
-  const addTask = (taskData: Omit<Task, 'id' | 'createdAt'>): Task => {
-    const newTask = taskService.addTask(taskData)
+  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt'>): Promise<Task> => {
+    const newTask = await taskService.addTask(taskData)
     setTasks(prev => [newTask, ...prev])
     showToast(`Đã tạo công việc: "${newTask.title.slice(0, 30)}..."`)
     return newTask
   }
 
-  const updateTask = (updated: Task) => {
-    taskService.updateTask(updated)
+  const updateTask = async (updated: Task): Promise<void> => {
+    await taskService.updateTask(updated)
     setTasks(prev => prev.map(t => (t.id === updated.id ? updated : t)))
     showToast('Đã cập nhật công việc thành công')
   }
 
-  const deleteTask = (id: string) => {
-    taskService.deleteTask(id)
+  const deleteTask = async (id: string): Promise<void> => {
+    await taskService.deleteTask(id)
     setTasks(prev => prev.filter(t => t.id !== id))
     showToast('Đã xóa công việc')
   }
 
-  const changeTaskStatus = (id: string, newStatus: TaskStatus) => {
+  const changeTaskStatus = async (id: string, newStatus: TaskStatus): Promise<void> => {
     const target = tasks.find(t => t.id === id)
     if (!target) return
     const updated = { ...target, status: newStatus }
-    updateTask(updated)
+    await updateTask(updated)
     if (newStatus === 'done') {
       showToast(`🏆 Tuyệt vời! Bạn vừa hoàn thành: "${target.title.slice(0, 25)}..."`)
     }
   }
 
-  const toggleSubtask = (taskId: string, subtaskId: string) => {
-    taskService.toggleSubtask(taskId, subtaskId)
+  const toggleSubtask = async (taskId: string, subtaskId: string): Promise<void> => {
+    const target = tasks.find(t => t.id === taskId)
+    if (!target) return
+    await taskService.toggleSubtask(taskId, subtaskId, target)
+    
     setTasks(prev =>
       prev.map(task => {
         if (task.id === taskId) {
@@ -167,15 +178,15 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     )
   }
 
-  const addAiTaskFromText = (prompt: string): Task => {
-    const parsed = parseNaturalLanguageTask(prompt)
-    const subtasks = (parsed.suggestedSubtasks || []).map((title, idx) => ({
-      id: `ai-sub-${Date.now()}-${idx}`,
+  const addAiTaskFromText = async (prompt: string): Promise<Task> => {
+    const parsed = await parseNaturalLanguageTaskAsync(prompt)
+    const subtasks = (parsed.suggestedSubtasks || []).map((title) => ({
+      id: '', // Backend will generate the objectId or we let MongoDB assign it if omitted, wait, backend schema expects no _id needed for creation
       title,
       completed: false
     }))
 
-    const newTask = addTask({
+    const newTask = await addTask({
       title: parsed.title,
       description: `Được tạo tự động bởi Trợ lý AI từ câu lệnh: "${prompt}"`,
       status: 'todo',
@@ -209,7 +220,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   // Pomodoro handlers
-  const startPomodoro = () => setPomodoro(prev => ({ ...prev,指示: true, isRunning: true }))
+  const startPomodoro = () => setPomodoro(prev => ({ ...prev, isRunning: true }))
   const pausePomodoro = () => setPomodoro(prev => ({ ...prev, isRunning: false }))
   const resetPomodoro = () =>
     setPomodoro(prev => ({
@@ -239,7 +250,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const q = searchQuery.toLowerCase()
         const matchTitle = task.title.toLowerCase().includes(q)
         const matchDesc = task.description?.toLowerCase().includes(q) || false
-        const matchTag = task.tags.some(tag => tag.toLowerCase().includes(q))
+        const matchTag = task.tags?.some(tag => tag.toLowerCase().includes(q))
         if (!matchTitle && !matchDesc && !matchTag) return false
       }
       // Category

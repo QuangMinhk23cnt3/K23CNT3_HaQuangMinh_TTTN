@@ -4,7 +4,8 @@ import {
   CheckCircle2,
   Flame,
   BrainCircuit,
-  Sparkles
+  Sparkles,
+  Clock
 } from 'lucide-react'
 import { useTasks } from '../../contexts/TaskContext'
 

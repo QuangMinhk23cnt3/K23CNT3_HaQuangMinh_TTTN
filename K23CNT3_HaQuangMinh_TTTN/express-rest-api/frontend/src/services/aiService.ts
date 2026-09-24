@@ -1,5 +1,7 @@
+import api from './api'
 import type { Task, TaskPriority, TaskCategory } from '../types/task'
 
+// ─── Interfaces ─────────────────────────────────────────────
 export interface ParsedTaskResult {
   title: string
   description?: string
@@ -11,249 +13,279 @@ export interface ParsedTaskResult {
   suggestedSubtasks?: string[]
 }
 
-/**
- * Trợ lý AI: Bóc tách ngôn ngữ tự nhiên thành công việc có cấu trúc
- */
-export function parseNaturalLanguageTask(input: string): ParsedTaskResult {
-  const text = input.trim()
-  const lower = text.toLowerCase()
-
-  // 1. Phân tích Mức độ ưu tiên (Priority)
-  let priority: TaskPriority = 'medium'
-  if (lower.includes('gấp') || lower.includes('khẩn') || lower.includes('ngay lập tức') || lower.includes('asap') || lower.includes('hỏa tốc')) {
-    priority = 'urgent'
-  } else if (lower.includes('quan trọng') || lower.includes('ưu tiên cao') || lower.includes('high') || lower.includes('chú ý')) {
-    priority = 'high'
-  } else if (lower.includes('khi nào rảnh') || lower.includes('thấp') || lower.includes('low') || lower.includes('không vội')) {
-    priority = 'low'
-  }
-
-  // 2. Phân tích Danh mục (Category)
-  let category: TaskCategory = 'other'
-  if (lower.includes('đồ án') || lower.includes('khóa luận') || lower.includes('báo cáo') || lower.includes('thực tập') || lower.includes('tttn')) {
-    category = 'thesis'
-  } else if (lower.includes('học') || lower.includes('ôn thi') || lower.includes('bài tập') || lower.includes('giảng viên') || lower.includes('thầy')) {
-    category = 'study'
-  } else if (lower.includes('công ty') || lower.includes('dự án') || lower.includes('khách') || lower.includes('meeting') || lower.includes('deadline')) {
-    category = 'work'
-  } else if (lower.includes('mua') || lower.includes('gia đình') || lower.includes('cá nhân') || lower.includes('tập thể dục') || lower.includes('chạy bộ')) {
-    category = 'personal'
-  }
-
-  // 3. Phân tích Ngày đến hạn (Due Date)
-  const today = new Date()
-  let targetDate = new Date(today)
-  let dueTime = '17:00'
-
-  if (lower.includes('hôm nay') || lower.includes('today') || lower.includes('tối nay') || lower.includes('chiều nay')) {
-    targetDate = new Date(today)
-    if (lower.includes('tối nay')) dueTime = '21:00'
-    if (lower.includes('chiều nay')) dueTime = '16:00'
-  } else if (lower.includes('ngày mai') || lower.includes('mai') || lower.includes('tomorrow')) {
-    targetDate.setDate(today.getDate() + 1)
-  } else if (lower.includes('ngày kia') || lower.includes('mốt')) {
-    targetDate.setDate(today.getDate() + 2)
-  } else if (lower.includes('tuần tới') || lower.includes('tuần sau')) {
-    targetDate.setDate(today.getDate() + 7)
-  } else {
-    // Thử trích xuất ngày dạng DD/MM hoặc DD-MM
-    const dateMatch = text.match(/(\d{1,2})[/-](\d{1,2})/)
-    if (dateMatch) {
-      const day = parseInt(dateMatch[1], 10)
-      const month = parseInt(dateMatch[2], 10) - 1
-      targetDate = new Date(today.getFullYear(), month, day)
-      if (targetDate < today) {
-        targetDate.setFullYear(today.getFullYear() + 1)
-      }
-    } else {
-      // Mặc định 2 ngày nữa nếu không chỉ định
-      targetDate.setDate(today.getDate() + 2)
-    }
-  }
-
-  // Trích xuất giờ (VD: 9h, 9h30, 14:00, 15h)
-  const timeMatch = text.match(/(\d{1,2})(?:h|:)(\d{2})?/)
-  if (timeMatch) {
-    const hour = timeMatch[1].padStart(2, '0')
-    const minute = timeMatch[2] || '00'
-    dueTime = `${hour}:${minute}`
-  }
-
-  const dueDate = targetDate.toISOString().split('T')[0]
-
-  // 4. Tags
-  const tags: string[] = []
-  if (category === 'thesis') tags.push('Đồ Án TTTN')
-  if (category === 'study') tags.push('Học Tập')
-  if (category === 'work') tags.push('Công Việc')
-  if (priority === 'urgent') tags.push('Khẩn Cấp')
-  if (lower.includes('meeting') || lower.includes('họp')) tags.push('Cuộc Họp')
-
-  // 5. Gợi ý subtasks cơ bản
-  const suggestedSubtasks = generateSuggestedSubtasks(text)
-
-  return {
-    title: text.replace(/^(hãy |tạo |thêm |nhắc |lên lịch )/i, ''),
-    priority,
-    category,
-    dueDate,
-    dueTime,
-    tags,
-    suggestedSubtasks
-  }
-}
-
-/**
- * Trợ lý AI: Phân rã công việc phức tạp thành các bước checklist con (Subtasks)
- */
-export function generateSuggestedSubtasks(taskTitle: string): string[] {
-  const lower = taskTitle.toLowerCase()
-
-  if (lower.includes('báo cáo') || lower.includes('thực tập') || lower.includes('đồ án')) {
-    return [
-      'Xây dựng đề cương chi tiết và danh mục mục lục',
-      'Viết chương 1: Giới thiệu đề tài & khảo sát bài toán',
-      'Viết chương 2: Cơ sở lý thuyết & công nghệ sử dụng',
-      'Viết chương 3: Thiết kế cơ sở dữ liệu & kiến trúc hệ thống',
-      'Viết chương 4: Cài đặt demo & đánh giá kết quả',
-      'Gặp giảng viên hướng dẫn để xin nhận xét sửa đổi'
-    ]
-  }
-
-  if (lower.includes('họp') || lower.includes('meeting')) {
-    return [
-      'Chuẩn bị slide trình chiếu nội dung',
-      'Liệt kê danh sách các khó khăn cần giải đáp',
-      'Ghi chép biên bản cuộc họp (Meeting Notes)',
-      'Gửi email tổng kết hành động (Follow-up)'
-    ]
-  }
-
-  if (lower.includes('frontend') || lower.includes('giao diện') || lower.includes('ui')) {
-    return [
-      'Thiết kế wireframe và mockup các màn hình chính',
-      'Xây dựng các component dùng chung (Buttons, Cards, Modals)',
-      'Tích hợp State Management và kết nối API backend',
-      'Kiểm thử giao diện responsive trên desktop & mobile'
-    ]
-  }
-
-  if (lower.includes('backend') || lower.includes('api') || lower.includes('database')) {
-    return [
-      'Thiết kế Schema Database (MongoDB / SQL)',
-      'Viết các Route và Controller xử lý nghiệp vụ',
-      'Viết Middleware xác thực JWT Authentication',
-      'Viết tài liệu Swagger API documentation và test Postman'
-    ]
-  }
-
-  if (lower.includes('ôn thi') || lower.includes('học')) {
-    return [
-      'Đọc lại giáo trình và slide bài giảng',
-      'Làm bộ câu hỏi trắc nghiệm & đề thi các năm trước',
-      'Ghi chú các công thức và khái niệm cốt lõi (Flashcards)',
-      'Tổng kết lại phần kiến thức còn chưa vững'
-    ]
-  }
-
-  // Mẫu mặc định chuẩn logic quản trị cá nhân
-  return [
-    'Xác định rõ kết quả đầu ra (Deliverables)',
-    'Chuẩn bị dữ liệu và công cụ cần thiết',
-    'Thực hiện giai đoạn 1: Triển khai khung sườn',
-    'Rà soát, kiểm tra chất lượng trước khi hoàn thành'
-  ]
-}
-
-/**
- * Trợ lý AI: Xử lý tin nhắn trò chuyện và đưa ra phản hồi thông minh
- */
-export function getAiChatResponse(userMessage: string, currentTasks: Task[]): {
+export interface AiChatResponseResult {
   reply: string
   suggestedTasks?: Array<Omit<Task, 'id' | 'createdAt'>>
   actions?: Array<{ label: string; prompt: string }>
-} {
+}
+
+// ─── SYSTEM PROMPT ──────────────────────────────────────────
+const SYSTEM_PROMPT = `Bạn là "TaskAI Copilot" — Trợ lý AI thông minh hỗ trợ sinh viên Việt Nam quản lý công việc cá nhân, lập kế hoạch đồ án tốt nghiệp, và tối ưu năng suất học tập.
+
+Quy tắc:
+1. Luôn trả lời bằng tiếng Việt.
+2. Sử dụng markdown để định dạng câu trả lời (bold, bullet points, emoji).
+3. Đưa ra lời khuyên cụ thể, thực tế và có thể hành động ngay.
+4. Khi người dùng hỏi về lập kế hoạch, hãy chia thành các bước rõ ràng theo ngày.
+5. Khi phân tích ma trận Eisenhower, hãy phân loại rõ 4 ô: Làm ngay / Lên lịch / Giao việc / Loại bỏ.
+6. Luôn khuyến khích và động viên người dùng.
+7. Giữ câu trả lời súc tích nhưng đầy đủ (không quá 300 từ).
+
+Ngữ cảnh: Bạn đang hỗ trợ sinh viên K23CNT thực hiện đồ án thực tập tốt nghiệp.`
+
+// ─── AI Chat via Backend API ────────────────────────────────
+export async function getAiChatResponseAsync(
+  userMessage: string,
+  currentTasks: Task[]
+): Promise<AiChatResponseResult> {
+  try {
+    // Build task context
+    const pendingTasks = currentTasks.filter(t => t.status !== 'done')
+    let taskContext = ''
+    if (pendingTasks.length > 0) {
+      taskContext = `\n\nDanh sách công việc hiện tại của người dùng (${pendingTasks.length} việc chưa hoàn thành):\n`
+      pendingTasks.forEach((t, i) => {
+        taskContext += `${i + 1}. "${t.title}" - Ưu tiên: ${t.priority} - Trạng thái: ${t.status} - Hạn: ${t.dueDate}\n`
+      })
+    }
+
+    const fullPrompt = `${SYSTEM_PROMPT}${taskContext}\n\nNgười dùng hỏi: ${userMessage}`
+
+    // Gọi backend API thay vì gọi Gemini trực tiếp từ browser
+    const response = await api.post('/ai/suggest', { prompt: fullPrompt }, { timeout: 30000 })
+    const reply = response.data?.data || 'Không nhận được phản hồi từ AI.'
+
+    // Generate contextual action suggestions
+    const actions = generateSmartActions(userMessage)
+
+    return { reply, actions }
+  } catch (error: any) {
+    console.error('AI API Error:', error?.response?.data || error.message)
+    // Fallback to offline response
+    return getOfflineChatResponse(userMessage, currentTasks)
+  }
+}
+
+// ─── Smart action suggestions based on context ─────────────
+function generateSmartActions(
+  userMessage: string
+): Array<{ label: string; prompt: string }> {
   const lower = userMessage.toLowerCase()
+  const actions: Array<{ label: string; prompt: string }> = []
 
-  // 1. Phân tích tổng quan / Lập kế hoạch tuần
-  if (lower.includes('kế hoạch') || lower.includes('lập lịch') || lower.includes('tuần')) {
-    const urgentCount = currentTasks.filter(t => t.priority === 'urgent' && t.status !== 'done').length
-    const pendingCount = currentTasks.filter(t => t.status !== 'done').length
-
-    return {
-      reply: `Chào bạn! Tôi là Trợ lý AI TaskAI của bạn. 🎯\n\nHiện tại bạn đang có **${pendingCount} công việc chưa hoàn thành**, trong đó có **${urgentCount} việc khẩn cấp** cần ưu tiên xử lý ngay.\n\n💡 **Chiến lược tối ưu cho tuần này:**\n1. Áp dụng kỹ thuật **Time Boxing**: Dành 2 tiếng đầu buổi sáng (khung giờ vàng tập trung) cho các task Đồ án TTTN.\n2. Bật chế độ **Pomodoro** (25 phút tập trung / 5 phút nghỉ) để tránh mệt mỏi và duy trì nhịp độ liên tục.\n3. Chia nhỏ các báo cáo lớn thành các phần mục lục để giải quyết từng ngày.`,
-      actions: [
-        { label: '🔥 Xem việc khẩn cấp', prompt: 'Những việc khẩn cấp nhất của tôi là gì?' },
-        { label: '📊 Phân tích ma trận Eisenhower', prompt: 'Phân tích ma trận Eisenhower cho các task hiện tại' },
-        { label: '✨ Tạo lịch học đồ án', prompt: 'Gợi ý lịch học đồ án tốt nghiệp trong 3 ngày tới' }
-      ]
-    }
+  if (lower.includes('kế hoạch') || lower.includes('tuần')) {
+    actions.push({
+      label: '📊 Phân tích Eisenhower',
+      prompt: 'Phân tích ma trận Eisenhower cho các task hiện tại'
+    })
+    actions.push({
+      label: '🎯 Chia nhỏ mục tiêu',
+      prompt: 'Hãy chia nhỏ mục tiêu lớn nhất thành các bước cụ thể'
+    })
+  } else if (lower.includes('eisenhower') || lower.includes('ma trận')) {
+    actions.push({
+      label: '🚀 Lập kế hoạch tuần',
+      prompt: 'Lập kế hoạch tuần này cho đồ án tốt nghiệp'
+    })
+  } else if (lower.includes('đồ án') || lower.includes('tốt nghiệp')) {
+    actions.push({
+      label: '📋 Gợi ý các bước hoàn thành',
+      prompt: 'Gợi ý các bước hoàn thành đồ án tốt nghiệp'
+    })
+    actions.push({
+      label: '🗓️ Lập timeline',
+      prompt: 'Lập timeline chi tiết cho đồ án tốt nghiệp trong 2 tháng tới'
+    })
+  } else {
+    actions.push({
+      label: '🚀 Lập kế hoạch tuần',
+      prompt: 'Lập kế hoạch tuần này cho đồ án tốt nghiệp'
+    })
+    actions.push({
+      label: '📊 Phân tích Eisenhower',
+      prompt: 'Phân tích ma trận Eisenhower cho các task hiện tại'
+    })
   }
 
-  // 2. Phân tích ma trận Eisenhower
-  if (lower.includes('eisenhower') || lower.includes('ma trận') || lower.includes('ưu tiên')) {
-    const urgentImportant = currentTasks.filter(t => (t.priority === 'urgent' || t.priority === 'high') && t.status !== 'done')
-    const lowPriority = currentTasks.filter(t => t.priority === 'low' && t.status !== 'done')
+  return actions
+}
 
-    return {
-      reply: `📊 **Phân tích Ma trận Eisenhower cho công việc của bạn:**\n\n` +
-        `• **Góc I (Khẩn cấp & Quan trọng - Làm Ngay):** Có ${urgentImportant.length} công việc. Ví dụ: "${urgentImportant[0]?.title || 'Hoàn thành báo cáo TTTN'}" - Hãy giải quyết trước 12h trưa!\n` +
-        `• **Góc II (Quan trọng nhưng Không khẩn cấp - Lên Lịch):** Các công việc dài hạn như ôn tập kiến thức, nghiên cứu tài liệu mới.\n` +
-        `• **Góc III (Khẩn cấp nhưng Không quan trọng - Ủy quyền/Tối giản):** Các thông báo tin nhắn vặt hoặc việc phụ.\n` +
-        `• **Góc IV (Không khẩn cấp & Không quan trọng - Loại bỏ):** Hiện có ${lowPriority.length} task độ ưu tiên thấp, bạn có thể hoãn lại sau.`,
-      actions: [
-        { label: '⚡ Bắt đầu Pomodoro ngay', prompt: 'Bắt đầu làm việc với Pomodoro' },
-        { label: '➕ Gợi ý thêm việc cần làm', prompt: 'Tôi cần làm gì tiếp theo?' }
-      ]
-    }
-  }
+// ─── Offline fallback ───────────────────────────────────────
+function getOfflineChatResponse(
+  userMessage: string,
+  currentTasks: Task[]
+): AiChatResponseResult {
+  const lower = userMessage.toLowerCase()
+  const pendingTasks = currentTasks.filter(t => t.status !== 'done')
+  const pendingCount = pendingTasks.length
 
-  // 3. Gợi ý đồ án tốt nghiệp
-  if (lower.includes('đồ án') || lower.includes('tốt nghiệp') || lower.includes('thực tập')) {
-    const today = new Date().toISOString().split('T')[0]
+  if (lower.includes('lập kế hoạch tuần') || lower.includes('tuần này')) {
     return {
-      reply: `🎓 Đối với đề tài **"XÂY DỰNG TRỢ LÝ AI QUẢN LÝ CÔNG VIỆC CÁ NHÂN"**, tôi đã tự động soạn thảo một lộ trình các đầu việc chuẩn để bạn đưa vào quản lý:`,
+      reply: `⚠️ *Đang ở chế độ offline — không thể kết nối Gemini API.*\n\nDưới đây là gợi ý cơ bản cho kế hoạch tuần:\n\n- **Thứ 2 - Thứ 3:** Hoàn thành khảo sát và thu thập tài liệu.\n- **Thứ 4 - Thứ 5:** Xây dựng khung báo cáo và viết Chương 1.\n- **Thứ 6:** Họp nhóm hoặc review lại tiến độ với GVHD.\n- **Cuối tuần:** Chỉnh sửa và nghỉ ngơi.`,
       suggestedTasks: [
         {
-          title: 'Hoàn thiện giao diện Frontend React + Tailwind cho TaskAI',
-          description: 'Xây dựng Dashboard, Kanban, Chat AI, và Pomodoro Timer',
-          status: 'todo',
-          priority: 'urgent',
-          category: 'thesis',
-          dueDate: today,
-          dueTime: '18:00',
-          subtasks: [
-            { id: '1', title: 'Thiết kế Dashboard hiển thị thống kê', completed: true },
-            { id: '2', title: 'Hoàn thiện Kanban kéo thả công việc', completed: false },
-            { id: '3', title: 'Tích hợp Trợ lý AI và Pomodoro', completed: false }
-          ],
-          tags: ['Frontend', 'React', 'TaskAI']
-        },
-        {
-          title: 'Soạn thảo Báo cáo thực tập Chương 3 & 4',
-          description: 'Mô tả chi tiết kiến trúc công nghệ và kết quả thử nghiệm',
-          status: 'todo',
+          title: 'Thu thập tài liệu tham khảo',
+          description: 'Tìm kiếm 5-10 tài liệu liên quan đến đề tài',
           priority: 'high',
           category: 'thesis',
-          dueDate: today,
-          dueTime: '21:00',
+          status: 'todo',
+          dueDate: new Date().toISOString().split('T')[0],
+          dueTime: '18:00',
+          tags: ['Tài liệu', 'Khảo sát'],
           subtasks: [
-            { id: '1', title: 'Vẽ sơ đồ kiến trúc hệ thống', completed: false },
-            { id: '2', title: 'Chụp ảnh các màn hình chức năng', completed: false }
+            { id: '1', title: 'Tìm trên Google Scholar', completed: false },
+            { id: '2', title: 'Đọc tóm tắt và đánh giá', completed: false }
           ],
-          tags: ['Báo Cáo', 'TTTN']
+          aiGenerated: true
+        }
+      ],
+      actions: [
+        {
+          label: '📊 Phân tích Eisenhower',
+          prompt: 'Phân tích ma trận Eisenhower cho các task hiện tại'
         }
       ]
     }
   }
 
-  // Phản hồi mặc định thông minh
+  if (lower.includes('eisenhower') || lower.includes('ma trận')) {
+    const urgentHigh = pendingTasks.filter(
+      t => t.priority === 'urgent' || t.priority === 'high'
+    ).length
+    const low = pendingTasks.filter(t => t.priority === 'low').length
+
+    return {
+      reply: `⚠️ *Chế độ offline*\n\n**Phân tích Ma trận Eisenhower cho ${pendingCount} công việc hiện tại:**\n\n🔴 **Quan trọng & Khẩn cấp (Làm ngay):** ${urgentHigh} việc.\n🔵 **Quan trọng nhưng Không khẩn cấp (Lên lịch):** Cần phân bổ thời gian hợp lý.\n🟡 **Khẩn cấp nhưng Không quan trọng (Giao việc):** Cố gắng tự động hóa.\n🟢 **Không quan trọng & Không khẩn cấp:** ${low > 0 ? `${low} việc, hãy cân nhắc bỏ qua.` : 'Rất tốt!'}`,
+      actions: [
+        {
+          label: '🚀 Lập kế hoạch tuần',
+          prompt: 'Lập kế hoạch tuần này cho đồ án tốt nghiệp'
+        }
+      ]
+    }
+  }
+
   return {
-    reply: `Tôi đã ghi nhận yêu cầu của bạn! 🤖\n\nVới vai trò là **Trợ lý AI Quản lý công việc cá nhân**, tôi có thể giúp bạn:\n1. Tự động bóc tách ngôn ngữ tự nhiên thành công việc (Ví dụ nhập: *"Chiều mai 15h nộp slide báo cáo tốt nghiệp cho thầy, việc khẩn"*).\n2. Phân rã mục tiêu lớn thành các checklist nhỏ khả thi.\n3. Nhắc nhở deadline và tư vấn kỹ thuật tập trung Pomodoro.\n\nBạn muốn tôi hỗ trợ lập kế hoạch cho nội dung nào hôm nay?`,
+    reply: `⚠️ *Không kết nối được Gemini API. Đang dùng chế độ offline.*\n\nHiện tại bạn có ${pendingCount} việc chưa hoàn thành. Hãy kiểm tra lại API key và thử lại!`,
     actions: [
-      { label: '🚀 Lập kế hoạch hôm nay', prompt: 'Kế hoạch công việc hôm nay của tôi' },
-      { label: '🎓 Gợi ý các bước làm đồ án TTTN', prompt: 'Gợi ý các bước hoàn thiện đề tài tốt nghiệp' },
-      { label: '⏳ Cách tăng tập trung khi làm việc', prompt: 'Làm thế nào để duy trì sự tập trung cao độ?' }
+      {
+        label: '🚀 Lập kế hoạch tuần',
+        prompt: 'Lập kế hoạch tuần này cho đồ án tốt nghiệp'
+      },
+      {
+        label: '📊 Phân tích Eisenhower',
+        prompt: 'Phân tích ma trận Eisenhower cho các task hiện tại'
+      }
     ]
   }
+}
+
+// ─── Natural Language Task Parser via Backend AI ────────────
+export async function parseNaturalLanguageTaskAsync(
+  input: string
+): Promise<ParsedTaskResult> {
+  try {
+    const prompt = `Bạn là AI phân tích câu lệnh tự nhiên thành task. Phân tích câu sau và trả về JSON (KHÔNG bọc trong markdown code block):
+{
+  "title": "tiêu đề task",
+  "description": "mô tả chi tiết (nếu có)",
+  "priority": "urgent|high|medium|low",
+  "category": "thesis|study|work|personal|other",
+  "dueDate": "YYYY-MM-DD",
+  "dueTime": "HH:mm",
+  "tags": ["tag1", "tag2"],
+  "suggestedSubtasks": ["bước 1", "bước 2"]
+}
+
+Ngày hôm nay: ${new Date().toISOString().split('T')[0]}
+Câu lệnh: "${input}"
+
+Trả về CHỈ JSON, không có gì khác.`
+
+    const response = await api.post('/ai/suggest', { prompt })
+    const text = (response.data?.data || '').trim()
+
+    // Try to extract JSON from the response
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0])
+      return {
+        title: parsed.title || input,
+        description: parsed.description,
+        priority: parsed.priority || 'medium',
+        category: parsed.category || 'other',
+        dueDate: parsed.dueDate || new Date().toISOString().split('T')[0],
+        dueTime: parsed.dueTime || '17:00',
+        tags: parsed.tags || ['AI Auto'],
+        suggestedSubtasks: parsed.suggestedSubtasks
+      }
+    }
+    throw new Error('Cannot parse JSON from response')
+  } catch {
+    // Fallback to local parsing
+    return parseNaturalLanguageTask(input)
+  }
+}
+
+// ─── Local fallback parser ──────────────────────────────────
+export function parseNaturalLanguageTask(input: string): ParsedTaskResult {
+  const text = input.trim()
+  const lower = text.toLowerCase()
+
+  let priority: TaskPriority = 'medium'
+  if (
+    lower.includes('gấp') ||
+    lower.includes('khẩn') ||
+    lower.includes('ngay lập tức')
+  )
+    priority = 'urgent'
+  else if (lower.includes('quan trọng') || lower.includes('cao'))
+    priority = 'high'
+  else if (lower.includes('rảnh') || lower.includes('thấp')) priority = 'low'
+
+  let category: TaskCategory = 'other'
+  if (lower.includes('đồ án') || lower.includes('báo cáo')) category = 'thesis'
+  else if (lower.includes('học') || lower.includes('thi')) category = 'study'
+
+  const today = new Date()
+  const targetDate = new Date(today)
+
+  if (lower.includes('ngày mai') || lower.includes('mai')) {
+    targetDate.setDate(today.getDate() + 1)
+  }
+
+  return {
+    title: text.replace(/^(hãy |tạo |thêm )/i, ''),
+    priority,
+    category,
+    dueDate: targetDate.toISOString().split('T')[0],
+    dueTime: '17:00',
+    tags: ['AI Auto'],
+    suggestedSubtasks: generateSuggestedSubtasks(text)
+  }
+}
+
+// ─── Local subtask generator ────────────────────────────────
+export function generateSuggestedSubtasks(taskTitle: string): string[] {
+  const lower = taskTitle.toLowerCase()
+  if (lower.includes('báo cáo') || lower.includes('đồ án')) {
+    return [
+      'Viết đề cương',
+      'Làm chương 1',
+      'Nộp cho giảng viên kiểm tra'
+    ]
+  }
+  return [
+    'Phân tích yêu cầu',
+    'Bắt đầu triển khai',
+    'Kiểm tra lại kết quả'
+  ]
+}
+
+// ─── Legacy sync wrapper (for backwards compatibility) ──────
+export function getAiChatResponse(
+  userMessage: string,
+  currentTasks: Task[]
+): AiChatResponseResult {
+  return getOfflineChatResponse(userMessage, currentTasks)
 }

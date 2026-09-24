@@ -15,13 +15,16 @@ export default function SettingsPage() {
 
   const [name, setName] = useState(user?.name || 'Hà Quang Minh')
   const [email, setEmail] = useState(user?.email || 'minh.hq@k23cnt3.edu.vn')
+  const [className, setClassName] = useState(user?.className || 'K23CNT3 - Khóa 23 Công Nghệ Thông Tin')
+  const [thesisTitle, setThesisTitle] = useState(user?.thesisTitle || 'XÂY DỰNG TRỢ LÝ AI QUẢN LÝ CÔNG VIỆC CÁ NHÂN')
+  
   const [aiPersona, setAiPersona] = useState('motivational')
   const [autoSubtasks, setAutoSubtasks] = useState(true)
   const [dailyBriefing, setDailyBriefing] = useState(true)
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault()
-    updateProfile({ name, email })
+    updateProfile({ name, email, className, thesisTitle })
     showToast('Đã lưu thông tin hồ sơ cá nhân thành công!')
   }
 
@@ -51,7 +54,7 @@ export default function SettingsPage() {
         <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs">
           <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
             <User className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-sm font-bold text-slate-900">Thông tin sinh viên</h2>
+            <h2 className="text-sm font-bold text-slate-900">Thông tin cá nhân hóa</h2>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
@@ -64,7 +67,7 @@ export default function SettingsPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                 />
               </div>
 
@@ -76,7 +79,7 @@ export default function SettingsPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                 />
               </div>
 
@@ -86,21 +89,23 @@ export default function SettingsPage() {
                 </label>
                 <input
                   type="text"
-                  disabled
-                  value="K23CNT3 - Khóa 23 Công Nghệ Thông Tin"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-100/70 px-3.5 py-2.5 text-xs text-slate-500 cursor-not-allowed"
+                  value={className}
+                  onChange={(e) => setClassName(e.target.value)}
+                  placeholder="VD: K23CNT3"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                 />
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Tên đề tài tốt nghiệp
+                  Tên đề tài / Dự án
                 </label>
                 <input
                   type="text"
-                  disabled
-                  value="XÂY DỰNG TRỢ LÝ AI QUẢN LÝ CÔNG VIỆC CÁ NHÂN"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-100/70 px-3.5 py-2.5 text-xs text-indigo-700 font-semibold cursor-not-allowed"
+                  value={thesisTitle}
+                  onChange={(e) => setThesisTitle(e.target.value)}
+                  placeholder="Nhập tên dự án cá nhân của bạn"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-indigo-700 font-semibold focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                 />
               </div>
             </div>
@@ -108,7 +113,7 @@ export default function SettingsPage() {
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm transition-all shadow-indigo-200"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Lưu thông tin</span>

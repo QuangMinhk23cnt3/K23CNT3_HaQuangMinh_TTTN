@@ -10,7 +10,7 @@ import {
 import { useTasks } from '../../contexts/TaskContext'
 import { useAuth } from '../../contexts/AuthContext'
 import type { AiChatMessage, Task } from '../../types/task'
-import { getAiChatResponse } from '../../services/aiService'
+import { getAiChatResponseAsync } from '../../services/aiService'
 
 export default function AiAssistantPage() {
   const { tasks, addTask } = useTasks()
@@ -40,7 +40,7 @@ export default function AiAssistantPage() {
     scrollToBottom()
   }, [messages, isTyping])
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputPrompt).trim()
     if (!query) return
 
@@ -55,9 +55,9 @@ export default function AiAssistantPage() {
     setInputPrompt('')
     setIsTyping(true)
 
-    // Simulate AI inference
-    setTimeout(() => {
-      const response = getAiChatResponse(query, tasks)
+    try {
+      // Call real Gemini API
+      const response = await getAiChatResponseAsync(query, tasks)
       const aiMsg: AiChatMessage = {
         id: 'msg-' + (Date.now() + 1),
         role: 'assistant',
@@ -67,15 +67,29 @@ export default function AiAssistantPage() {
         actions: response.actions
       }
       setMessages(prev => [...prev, aiMsg])
+    } catch (error: any) {
+      const errorMsg: AiChatMessage = {
+        id: 'msg-err-' + Date.now(),
+        role: 'assistant',
+        content: `❌ Không thể kết nối Gemini API: ${error?.message || 'Lỗi không xác định'}\n\nVui lòng kiểm tra lại kết nối mạng hoặc API key.`,
+        timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+      }
+      setMessages(prev => [...prev, errorMsg])
+    } finally {
       setIsTyping(false)
-    }, 600)
+    }
   }
 
-  const handleAddSuggestedTask = (taskData: Omit<Task, 'id' | 'createdAt'>) => {
-    addTask({
-      ...taskData,
-      aiGenerated: true
-    })
+  const handleAddSuggestedTask = async (taskData: Omit<Task, 'id' | 'createdAt'>) => {
+    try {
+      await addTask({
+        ...taskData,
+        aiGenerated: true
+      })
+    } catch (error: any) {
+      console.error(error)
+      alert(`Có lỗi xảy ra khi thêm công việc đề xuất! Chi tiết: ${error?.response?.data?.message || error?.message || 'Không rõ nguyên nhân'}`)
+    }
   }
 
   return (
@@ -104,7 +118,7 @@ export default function AiAssistantPage() {
 
         <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500 bg-white/80 border border-slate-200/80 px-3 py-1.5 rounded-xl">
           <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-          <span>Model: TaskAI Assistant v2.0</span>
+          <span>Model: Gemini Flash Lite (Ultra-fast)</span>
         </div>
       </div>
 
@@ -248,7 +262,7 @@ export default function AiAssistantPage() {
         </form>
 
         <p className="mt-2 text-[10px] text-center text-slate-400">
-          Trợ lý AI TaskAI sử dụng mô hình tối ưu cho năng suất cá nhân và quản lý đồ án tốt nghiệp
+          Trợ lý AI TaskAI được hỗ trợ bởi Google Gemini Flash Lite — Tối ưu tốc độ cao và phản hồi tức thì
         </p>
       </div>
     </div>

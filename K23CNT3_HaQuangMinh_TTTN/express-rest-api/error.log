@@ -1,0 +1,50 @@
+2026-09-21T09:02:54.222Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:02:56.317Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:02:56.892Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:02:59.669Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:03:00.962Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:03:03.284Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:03:04.285Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:03:13.077Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:03:13.931Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)
+2026-09-21T09:03:14.355Z: Error: Email hoặc mật khẩu không đúng
+    at createError (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:30:20)
+    at Object.signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\services\auth.service.ts:181:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async signin (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\controllers\auth.controller.ts:46:7)

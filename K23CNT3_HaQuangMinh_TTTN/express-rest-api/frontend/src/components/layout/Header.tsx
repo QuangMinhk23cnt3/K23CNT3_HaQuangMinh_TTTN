@@ -1,27 +1,34 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Sparkles, Plus, Search, Timer, Bell, Calendar as CalendarIcon } from 'lucide-react'
+import { Sparkles, Plus, Search, Timer, Bell, Calendar as CalendarIcon, Menu } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTasks } from '../../contexts/TaskContext'
 import { useNavigate } from 'react-router-dom'
 
-export default function Header() {
+interface HeaderProps {
+  onMenuToggle?: () => void
+}
+
+export default function Header({ onMenuToggle }: HeaderProps) {
   const { user } = useAuth()
   const { addAiTaskFromText, openCreateModal, pomodoro, searchQuery, setSearchQuery } = useTasks()
   const [aiInput, setAiInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleAiSubmit = (e: FormEvent) => {
+  const handleAiSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!aiInput.trim()) return
 
     setIsAiLoading(true)
-    setTimeout(() => {
-      addAiTaskFromText(aiInput.trim())
+    try {
+      await addAiTaskFromText(aiInput.trim())
       setAiInput('')
+    } catch (error) {
+      console.error(error)
+    } finally {
       setIsAiLoading(false)
-    }, 400)
+    }
   }
 
   // Format today date in Vietnamese
@@ -40,10 +47,19 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/80 backdrop-blur-md px-6">
-      {/* Left: Greeting & Date */}
+    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/80 backdrop-blur-md px-4 sm:px-6">
+      {/* Left: Menu toggle (mobile) & Greeting */}
       <div className="flex items-center gap-3">
-        <div>
+        {onMenuToggle && (
+          <button
+            onClick={onMenuToggle}
+            className="p-1.5 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden"
+            title="Mở menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <div className="hidden sm:block">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-bold text-slate-800">
               Xin chào, {user?.name || 'Hà Quang Minh'}

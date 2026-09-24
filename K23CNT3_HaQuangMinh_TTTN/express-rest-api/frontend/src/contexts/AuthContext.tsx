@@ -37,15 +37,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (credentials: RegisterCredentials) => {
     setIsLoading(true)
     try {
-      const res = await authService.signup(credentials)
-      setUser(res.user)
+      await authService.signup(credentials)
+      // Do not set user here, force them to login to get a valid access token
     } finally {
       setIsLoading(false)
     }
   }
 
-  const logout = () => {
-    authService.signout()
+  const logout = async () => {
+    await authService.signout()
     setUser(null)
   }
 

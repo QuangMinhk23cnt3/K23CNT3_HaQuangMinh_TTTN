@@ -1,0 +1,22 @@
+2026-09-21T09:00:57.694Z: JsonWebTokenError: jwt malformed
+    at module.exports [as verify] (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\jsonwebtoken\verify.js:70:17)
+    at verifyAccessToken (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\utils\jwt.ts:31:14)
+    at authMiddleware (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\middleware\auth.middleware.ts:15:21)
+    at Layer.handleRequest (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:342:13)
+    at C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:291:5)
+    at router.handle (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:60:12)
+2026-09-21T09:02:50.767Z: JsonWebTokenError: jwt malformed
+    at module.exports [as verify] (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\jsonwebtoken\verify.js:70:17)
+    at verifyAccessToken (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\utils\jwt.ts:31:14)
+    at authMiddleware (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\src\middleware\auth.middleware.ts:15:21)
+    at Layer.handleRequest (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:342:13)
+    at C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:582:12)
+    at next (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:291:5)
+    at router.handle (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:186:3)
+    at router (C:\Users\Dell\Downloads\Prj_TTTN\Prj_TTTN\K23CNT3_HaQuangMinh_TTTN\express-rest-api\node_modules\router\index.js:60:12)

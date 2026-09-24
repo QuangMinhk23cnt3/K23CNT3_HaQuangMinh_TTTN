@@ -24,8 +24,9 @@ export default function Register() {
 
     setIsLoading(true)
     try {
-      await register({ name, email, password, confirmPassword })
-      navigate('/')
+      await register({ name, email, password })
+      alert('Đăng ký thành công! Vui lòng đăng nhập bằng tài khoản vừa tạo.')
+      navigate('/auth/login')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Đăng ký không thành công. Vui lòng thử lại.')
     } finally {

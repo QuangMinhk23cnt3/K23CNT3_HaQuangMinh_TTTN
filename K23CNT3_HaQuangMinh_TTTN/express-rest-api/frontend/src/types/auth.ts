@@ -2,9 +2,11 @@ export interface User {
   id: string
   name: string
   email: string
-  role?: string
+  role: 'admin' | 'user' | 'student'
   avatar?: string
-  createdAt?: string
+  className?: string
+  thesisTitle?: string
+  createdAt: string
 }
 
 export interface AuthResponse {
@@ -21,12 +23,12 @@ export interface AuthResponse {
 
 export interface LoginCredentials {
   email: string
-  password?: string
+  password: string
 }
 
 export interface RegisterCredentials {
   name: string
   email: string
-  password?: string
+  password: string
   confirmPassword?: string
 }
