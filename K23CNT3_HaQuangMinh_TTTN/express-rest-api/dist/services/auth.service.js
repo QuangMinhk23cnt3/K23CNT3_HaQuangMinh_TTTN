@@ -116,7 +116,7 @@ const signin = async ({ email, password, }) => {
     if (!passwordMatched) {
         throw createError("Email hoặc mật khẩu không đúng", 401);
     }
-    if (!user.isEmailVerified && process.env.NODE_ENV === "production") {
+    if (!user.isEmailVerified && process.env.REQUIRE_EMAIL_VERIFY === "true") {
         throw createError("Vui lòng xác thực email trước khi đăng nhập", 403);
     }
     const accessToken = (0, jwt_1.generateAccessToken)(user);

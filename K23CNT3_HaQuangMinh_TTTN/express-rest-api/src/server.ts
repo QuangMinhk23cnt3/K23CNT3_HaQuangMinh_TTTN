@@ -30,7 +30,10 @@ app.use(helmet({
 
 app.use(
     cors({
-        origin: process.env.CLIENT_URL || "*",
+        origin: (origin, callback) => {
+            // Cho phép same-origin, curl/postman không có origin header, hoặc bất kỳ origin nào kết nối đến
+            callback(null, true);
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         allowedHeaders: ["Content-Type", "Authorization"],

@@ -17,6 +17,7 @@ const swagger_1 = __importDefault(require("./config/swagger"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const task_routes_1 = __importDefault(require("./routes/task.routes"));
+const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -26,7 +27,10 @@ app.use((0, helmet_1.default)({
     crossOriginEmbedderPolicy: false
 }));
 app.use((0, cors_1.default)({
-    origin: process.env.CLIENT_URL || "*",
+    origin: (origin, callback) => {
+        // Cho phép same-origin, curl/postman không có origin header, hoặc bất kỳ origin nào kết nối đến
+        callback(null, true);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -80,11 +84,12 @@ app.get("/api-docs.json", (req, res) => {
 app.use("/api/users", user_routes_1.default);
 app.use("/api/auth", auth_routes_1.default);
 app.use("/api/tasks", task_routes_1.default);
+app.use("/api/ai", ai_routes_1.default);
 // ─── Serve Frontend ───────────────────────────────────────────────────────────
 // Phục vụ thư mục static của React build
 app.use(express_1.default.static(path_1.default.join(__dirname, '../frontend/dist')));
 // Các request không bắt đầu bằng /api sẽ được điều hướng tới index.html
-app.get('*', (req, res) => {
+app.use((req, res) => {
     res.sendFile(path_1.default.join(__dirname, '../frontend/dist/index.html'));
 });
 // ─── Global Error Handler ─────────────────────────────────────────────────────

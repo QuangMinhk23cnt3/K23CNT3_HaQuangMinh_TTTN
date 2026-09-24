@@ -205,7 +205,7 @@ const signin = async ({
     );
   }
 
-  if (!user.isEmailVerified && process.env.NODE_ENV === "production") {
+  if (!user.isEmailVerified && process.env.REQUIRE_EMAIL_VERIFY === "true") {
     throw createError(
       "Vui lòng xác thực email trước khi đăng nhập",
       403

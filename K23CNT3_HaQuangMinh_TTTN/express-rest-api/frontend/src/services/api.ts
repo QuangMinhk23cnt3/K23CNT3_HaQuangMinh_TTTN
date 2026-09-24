@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3011/api"
+const API_URL = import.meta.env.VITE_API_URL || "/api"
 
 const TOKEN_KEY = "taskai_token"
 const REFRESH_TOKEN_KEY = "taskai_refresh_token"
